@@ -1,0 +1,15 @@
+{application, rfc3164,
+ [{description, "rfc3164 implementation"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, ["Mathieu Kerjouan"]},
+  {licenses, ["BSD"]},
+  {links, [{"Github", "https://github.com/niamtokik/rfc5426"}]}
+ ]}.
