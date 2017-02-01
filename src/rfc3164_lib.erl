@@ -116,13 +116,22 @@ priority( <<"<", Priority:24/bitstring, ">", Rest/bitstring>>
     priority_check(Rest, PropList, Priority, Options);
 priority( RawPacket
 	, PropList
-	, Options) ->
-    year(RawPacket, push({priority, undefined}, PropList), Options).
+	, Options) 
+  when is_bitstring(RawPacket) ->
+    year(RawPacket, push({priority, undefined}, PropList), Options);
+
+% encode
+priority( List 
+	, PropList
+	, Options ) 
+  when is_list(List) ->
+    proplists:get_value(priority, List, <<>>).
 
 %%--------------------------------------------------------------------
 %%
 %%--------------------------------------------------------------------
-priority_check(RawPacket, PropList, Priority) ->
+priority_check(RawPacket, PropList, Priority) 
+  when is_bitstring(RawPacket) ->
     priority_check(RawPacket, PropList, Priority, []).
 
 %%--------------------------------------------------------------------
@@ -133,7 +142,8 @@ priority_check(RawPacket, PropList, Priority) ->
 priority_check( RawPacket
 	      , PropList
 	      , Priority
-	      , Options) ->
+	      , Options) 
+  when is_bitstring(RawPacket) ->
     case bitstring_to_integer_check(Priority, 0, 191) of
 	{ok, Integer} -> 
 	    facility_and_severity(RawPacket, PropList, Integer, Options);
@@ -148,12 +158,29 @@ priority_check( RawPacket
 %%--------------------------------------------------------------------
 -spec facility_and_severity(raw_packet(), struct(), bitstring(), list())
 			   -> struct().
-facility_and_severity(RawPacket, PropList, Priority, Options) ->
+facility_and_severity(RawPacket, PropList, Priority, Options) 
+  when is_bitstring(RawPacket) ->
     Facility = Priority bsr 3,
     Severity = Priority - (Facility*8),
     ReturnF = push({facility, facility(Facility)}, PropList),
     Ret = push({severity, severity(Severity)}, ReturnF),
-    year(RawPacket, Ret, Options).
+    year(RawPacket, Ret, Options);
+
+%encode
+facility_and_severity(List, PropList, Priority, Options) 
+  when is_list(List) ->
+    % <13> if not defined
+    Facility = case proplists:get_value(facility, List, user) of
+		   Int when is_integer(Int) -> Int;
+		   At when is_atom(At) -> facility(At)
+	       end,
+    Severity = case proplists:get_value(severity, List, syslog) of
+		   Integer when is_integer(Integer) -> Integer;
+		   Atom when is_atom(Atom) -> severity(Atom)
+	       end,
+    Priority = erlang:integer_to_binary(Facility*8+Severity),
+    <<"<", Priority/bitstring,">">>.
+
 
 %%--------------------------------------------------------------------
 %% facility table, simply hardcoded here.
@@ -220,7 +247,8 @@ year(<<Year:32/bitstring, " ", Rest/bitstring>>, PropList, Options) ->
 	{error, Reason} ->
 	    month(Rest, push({year, Reason}, PropList), Options)
     end;
-year(RawPacket, PropList, Options) ->
+year(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     month(RawPacket, PropList, Options).
 
 
@@ -241,7 +269,8 @@ year(RawPacket, PropList, Options) ->
 ?MONTH("Oct", 10);
 ?MONTH("Nov", 11);
 ?MONTH("Dec", 12);
-month(RawPacket, PropList, Options) ->
+month(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     day(RawPacket, PropList, Options).
 
 %%--------------------------------------------------------------------
@@ -273,7 +302,8 @@ day(<<DayA:8, DayB:8, " ",Rest/bitstring>>, PropList, Options)
 	{error, Reason} ->
 	    ttime(Rest, push({day, Reason}, PropList), Options)
     end;
-day(RawPacket, PropList, Options) ->
+day(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     ttime(RawPacket, PropList, Options).
 
 %%--------------------------------------------------------------------
@@ -295,13 +325,15 @@ ttime(<<Hour:16/bitstring, ":",
 	Second:16/bitstring, 
 	Rest/bitstring>>, PropList, Options) ->
     hour(Rest, PropList, {Hour, Minute, Second}, Options);
-ttime(RawPacket, PropList, Options) ->
+ttime(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     timezone(RawPacket, PropList, Options).
 
 %%--------------------------------------------------------------------
 %%
 %%--------------------------------------------------------------------
-hour(RawPacket, PropList, {Hour, Minute, Second}, Options) ->
+hour(RawPacket, PropList, {Hour, Minute, Second}, Options) 
+  when is_bitstring(RawPacket) ->
     case bitstring_to_integer_check(Hour, 0, 23) of
 	{ok, Integer} -> 
 	    Ret = push({hour, Integer}, PropList),
@@ -314,7 +346,8 @@ hour(RawPacket, PropList, {Hour, Minute, Second}, Options) ->
 %%--------------------------------------------------------------------
 %%
 %%--------------------------------------------------------------------
-minute(RawPacket, PropList, {Minute, Second}, Options) ->
+minute(RawPacket, PropList, {Minute, Second}, Options) 
+  when is_bitstring(RawPacket) ->
     case bitstring_to_integer_check(Minute, 0, 59) of
 	{ok, Integer} ->
 	    Ret = push({minute, Integer}, PropList),
@@ -327,7 +360,8 @@ minute(RawPacket, PropList, {Minute, Second}, Options) ->
 %%--------------------------------------------------------------------
 %%
 %%--------------------------------------------------------------------
-second(RawPacket, PropList, {Second}, Options) ->
+second(RawPacket, PropList, {Second}, Options) 
+  when is_bitstring(RawPacket) ->
     case bitstring_to_integer_check(Second, 0, 59) of
 	{ok, Integer} ->
 	    Ret = push({second, Integer}, PropList),
@@ -342,13 +376,15 @@ second(RawPacket, PropList, {Second}, Options) ->
 %%--------------------------------------------------------------------
 timezone(<<"TZ", Rest/bitstring>>, PropList, Options) ->
     hostname(Rest, push({timezone, "TZ"}, PropList), Options);
-timezone(RawPacket, PropList, Options) ->
+timezone(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     hostname(RawPacket, PropList, Options).
 
 %%--------------------------------------------------------------------
 %%
 %%--------------------------------------------------------------------
-hostname(RawPacket, PropList, Options) ->
+hostname(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     hostname(RawPacket, PropList, <<>>, Options).
 
 hostname(<<>>, PropList, 
@@ -386,7 +422,8 @@ hostname(<<Char:8, Rest/bitstring>>, PropList,
 %%--------------------------------------------------------------------
 %%
 %%--------------------------------------------------------------------
-tag(RawPacket, PropList, Options) ->
+tag(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     tag(RawPacket, PropList, <<>>, Options).
 
 tag(<<>>, PropList, Tag, Options) ->
@@ -402,7 +439,8 @@ tag(<<Char:8, Rest/bitstring>>, PropList, Tag, Options)
        (Char =:= $.) orelse 
        (Char =:= $-) ->
     tag(Rest, PropList, <<Tag/bitstring, Char>>, Options);
-tag(RawPacket, PropList, Tag, Options) ->
+tag(RawPacket, PropList, Tag, Options) 
+  when is_bitstring(RawPacket) ->
     message(RawPacket, push({tag, bad_tag}, PropList), Options).
 
 %%--------------------------------------------------------------------
@@ -410,7 +448,8 @@ tag(RawPacket, PropList, Tag, Options) ->
 %%--------------------------------------------------------------------
 processid(<<"]", Rest/bitstring>>, PropList, Options) ->
     message(Rest, PropList, Options);
-processid(RawPacket, PropList, Options) ->
+processid(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     processid(RawPacket, PropList, <<>>, Options).
 
 processid(<<"]: ", Rest/bitstring>>, PropList, ProcessID, Options) ->
@@ -426,13 +465,15 @@ processid(<<"]: ", Rest/bitstring>>, PropList, ProcessID, Options) ->
 processid(<<Char:8, Rest/bitstring>>, PropList, ProcessID, Options) 
   when Char >= $0 andalso Char =< $9 ->
     processid(Rest, PropList, <<ProcessID/bitstring, Char:8>>, Options);
-processid(RawPacket, PropList, ProcessID, Options) ->
+processid(RawPacket, PropList, ProcessID, Options) 
+  when is_bitstring(RawPacket) ->
     message(RawPacket, push({processid, undefined}, PropList), Options).
 
 %%--------------------------------------------------------------------
 %%
 %%--------------------------------------------------------------------
-message(RawPacket, PropList, Options) ->
+message(RawPacket, PropList, Options) 
+  when is_bitstring(RawPacket) ->
     push({message, RawPacket}, PropList).
 
 %%--------------------------------------------------------------------
