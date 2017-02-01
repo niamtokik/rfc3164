@@ -11,7 +11,7 @@ rfc3164 implementation in Erlang. Testing. Don't use it in production! ;)
 By default, this library use proplists (tuple + lists):
 
     RawPacket = <<"<0>1999 Oct 10 11:12:13 myhostname process[123]: message test">>
-    rfc3164:packet_check(RawPacket).
+    rfc3164:decode(RawPacket).
     % return:
     % [{message,<<"message test">>},
     %  {processid,123},
@@ -28,7 +28,7 @@ By default, this library use proplists (tuple + lists):
 But, you can also use maps:
 
     RawPacket = <<"<0>1999 Oct 10 11:12:13 myhostname process[123]: message test">>
-    rfc3164:packet_check(RawPacket, [{struct, map}]).
+    rfc3164:decode(RawPacket, [{struct, map}]).
     % return:
     % #{day => 10,
     %   hostname => <<"myhostname">>,
@@ -45,7 +45,6 @@ But, you can also use maps:
 ## Todo list
 
  * Support validation
- * Split in 2 files: rfc3164.erl and rfc3164_lib.erl
  * Rename interfaces
  * Rewrite specifications
  * Add more datastructure (record and AST)
@@ -63,3 +62,9 @@ But, you can also use maps:
 
  * http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.sbin/syslogd/
  * http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/sys/sys/syslog.h
+
+ * https://github.com/balabit/syslog-ng
+
+ * https://en.wikipedia.org/wiki/Syslog
+ * https://www.sans.org/reading-room/whitepapers/logging/ins-outs-system-logging-syslog-1168
+ * 
