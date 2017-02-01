@@ -20,20 +20,42 @@ options() ->
 
 %%--------------------------------------------------------------------
 %% datastructure wrapper
+%%
+%% @doc
+%%      push function will push value based on exported data type. 
+%%      This function can match multiple defined standard structure
+%%      as proplist, map and record (rfc3164 defined in 
+%%      rfc3164_lib.hrl header file).
+%% @end
 %%--------------------------------------------------------------------
 -spec push(push(), map()) -> map();
-	  (push(), list()) -> list().
+	  (push(), list()) -> list();
+	  (push(), #rfc3164{}) -> #rfc3164{}.
 push({Key, Value}, Prop) ->
     push({Key, Value}, Prop, []).
 
 -spec push(push(), map(), list()) -> map();
-	  (push(), list(), list()) -> list().
+	  (push(), list(), list()) -> list();
+	  (push(), #rfc3164{}, list()) -> #rfc3164{}.
 push({Key, Value}, Prop, Options) 
   when is_map(Prop) ->
     maps:put(Key, Value, Prop);
 push({Key, Value}, Prop, Options) 
   when is_list(Prop) ->
-    [{Key, Value}] ++ Prop.
+    [{Key, Value}] ++ Prop;
+?PUSH_RECORD(priority);
+?PUSH_RECORD(facility);
+?PUSH_RECORD(severity);
+?PUSH_RECORD(year);
+?PUSH_RECORD(month);
+?PUSH_RECORD(day);
+?PUSH_RECORD(hour);
+?PUSH_RECORD(minute);
+?PUSH_RECORD(second);
+?PUSH_RECORD(hostname);
+?PUSH_RECORD(tag);
+?PUSH_RECORD(processid);
+?PUSH_RECORD(message).
 
 %%--------------------------------------------------------------------
 %% rfc3164 packet check
@@ -46,8 +68,9 @@ packet_check(RawPacket) ->
 -spec packet_check(raw_packet(), list()) 
 		  -> struct().
 packet_check(RawPacket, Options) ->
-    case proplists:get_value(struct, Options, list) of
-	map -> priority(RawPacket, #{}, Options);
+    case proplists:get_value(export, Options, list) of
+	as_map -> priority(RawPacket, #{}, Options);
+	as_record -> priority(RawPacket, #rfc3164{}, Options);
 	_ -> priority(RawPacket, [], Options)
     end.
 

@@ -16,6 +16,28 @@
 -type value() :: term().
 -type push() :: {key(), value()}.
 
+-record(rfc3164, { priority = undefined :: undefined | tuple(),
+		   facility = undefined :: atom() | integer(),
+		   severity = undefined ::  atom() | integer(),
+		   year = undefined :: undefined | integer(),
+		   month = undefined :: undefined | integer(),
+		   day = undefined :: undefined | integer(),
+		   hour = undefined :: undefined | integer(),
+		   minute = undefined :: undefined | integer(),
+		   second = undefined :: undefined | integer(),
+		   hostname = undefined :: undefined | bitstring(),
+		   tag = undefined :: undefined | bitstring(),
+		   processid = undefined :: undefined | integer(),
+		   message = undefined :: undefined | bitstring()
+		 }
+).
+
+-define( PUSH_RECORD(ATOM),
+	 push({ATOM, Value}, Prop, Options) 
+	    when is_record(Prop, rfc3164) ->
+	       Prop#rfc3164{ATOM = Value}
+).
+
 -define( FACILITY(INTEGER, ATOM)
        , facility(INTEGER) -> ATOM; 
 	 facility(ATOM) -> INTEGER

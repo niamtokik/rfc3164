@@ -1,6 +1,14 @@
 # rfc3164
 
-rfc3164 implementation in Erlang. Testing. Don't use it in production! ;)
+rfc3164 implementation in Erlang. Testing. Don't use it in production!
+;)
+
+This module was built with flexibility in mind. So, currently, this
+one will return standard and well used erlang datastructure:
+
+ * proplist
+ * map
+ * record
 
 ## Build
 
@@ -28,7 +36,7 @@ By default, this library use proplists (tuple + lists):
 But, you can also use maps:
 
     RawPacket = <<"<0>1999 Oct 10 11:12:13 myhostname process[123]: message test">>
-    rfc3164:decode(RawPacket, [{struct, map}]).
+    rfc3164:decode(RawPacket, [{export, as_map}]).
     % return:
     % #{day => 10,
     %   hostname => <<"myhostname">>,
@@ -41,6 +49,19 @@ But, you can also use maps:
     %   severity => emerg,
     %   tag => <<"process">>,
     %   year => 1999} 
+
+And record with `rfc3164` record defined in `rfc3164_lib.hrl`:
+
+    RawPacket = <<"<0>1999 Oct 10 11:12:13 myhostname process[123]: message test">>
+    rfc3164:decode(RawPacket, [{export, as_record}]).
+    % return:
+	% #rfc3164{priority = undefined, facility = kern,
+	%          severity = emerg, year = 1999, 
+	%          month = 10, day = 10, hour = 11,
+	%          minute = 12, second = 13,
+	%          hostname = <<"myhostname">>,
+	%          tag = <<"process">>, processid = 123,
+	%          message = <<"message test">>}
 
 ## Todo list
 
