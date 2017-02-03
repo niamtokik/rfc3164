@@ -34,6 +34,9 @@ options() ->
 push({Key, Value}, Prop) ->
     push({Key, Value}, Prop, []).
 
+%%--------------------------------------------------------------------
+%%
+%%--------------------------------------------------------------------
 -spec push(push(), map(), list()) -> map();
 	  (push(), list(), list()) -> list();
 	  (push(), #rfc3164{}, list()) -> #rfc3164{}.
@@ -58,7 +61,65 @@ push({Key, Value}, Prop, Options)
 ?PUSH_RECORD(message).
 
 %%--------------------------------------------------------------------
+%% @doc
+%%      pull retrieve value from standard used datastructure. We assume
+%%      all values was checked. If not, we can add some Options.
+%% @end
+%%--------------------------------------------------------------------
+-spec pull(atom(), #rfc3164{}) -> bitstring();
+	  (term(), list() | map()) -> bitstring().
+pull(Key, Prop) ->
+    pull(Key, Prop, []).
+
+pull_test() ->
+    ?assertEqual( pull(priority, #rfc3164{ priority = <<"123">> })
+		, <<"123">>),
+    ?assertEqual( pull(facility, push({facility, 0}, #{}))
+		, <<"0">>).
+
+-spec pull(atom(), #rfc3164{}, list()) -> bitstring();
+	  (term(), list() | map(), list()) -> bitstring().
+pull(Key, Prop, Options) 
+  when is_list(Prop) ->
+    proplists:get_value(Key, Prop, <<>>);
+pull(Key, Prop, Options) 
+  when is_map(Prop) ->
+    maps:get(Key, Prop);
+?PULL_RECORD(priority) ->
+    Prop#rfc3164.priority;
+?PULL_RECORD(facility) ->
+    Prop#rfc3164.facility;
+?PULL_RECORD(severity) ->
+    Prop#rfc3164.severity;
+?PULL_RECORD(year) ->
+    Prop#rfc3164.year;
+?PULL_RECORD(month) ->
+    Prop#rfc3164.month;
+?PULL_RECORD(day) ->
+    Prop#rfc3164.day;
+?PULL_RECORD(hour) ->
+    Prop#rfc3164.hour;
+?PULL_RECORD(minute) ->
+    Prop#rfc3164.minute;
+?PULL_RECORD(second) ->
+    Prop#rfc3164.second;
+?PULL_RECORD(hostname) ->
+    Prop#rfc3164.hostname;
+?PULL_RECORD(tag) ->
+    Prop#rfc3164.tag;
+?PULL_RECORD(processid) ->
+    Prop#rfc3164.processid;
+?PULL_RECORD(message) ->
+    Prop#rfc3164.message;
+pull(_, Prop, Options) 
+  when is_record(Prop, rfc3164) ->
+    <<>>.    
+
+%%--------------------------------------------------------------------
 %% rfc3164 packet check
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec packet_check(raw_packet()) 
 		  -> struct().
@@ -76,6 +137,9 @@ packet_check(RawPacket, Options) ->
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec priority(bitstring(), map() | list()) 
 	      -> struct().
@@ -84,6 +148,9 @@ priority(RawPacket, PropList) ->
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec priority(bitstring(), map() | list(), list()) 
 	      -> map() | list().
@@ -129,6 +196,9 @@ priority( List
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 priority_check(RawPacket, PropList, Priority) 
   when is_bitstring(RawPacket) ->
@@ -136,6 +206,9 @@ priority_check(RawPacket, PropList, Priority)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec priority_check(raw_packet(), struct(), bitstring(), list())
 		    -> struct().
@@ -155,6 +228,9 @@ priority_check( RawPacket
 
 %%--------------------------------------------------------------------
 %% 
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec facility_and_severity(raw_packet(), struct(), bitstring(), list())
 			   -> struct().
@@ -184,6 +260,9 @@ facility_and_severity(List, PropList, Priority, Options)
 
 %%--------------------------------------------------------------------
 %% facility table, simply hardcoded here.
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec facility(integer()) -> atom();
 	      (atom()) -> integer().
@@ -214,6 +293,10 @@ facility_and_severity(List, PropList, Priority, Options)
 
 %%--------------------------------------------------------------------
 %% severity table, simply hardcoded here.
+%%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec severity(integer()) -> atom();
 	      (atom()) -> integer().
@@ -228,6 +311,9 @@ facility_and_severity(List, PropList, Priority, Options)
   
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------   
 -spec year(raw_packet(), struct(), list())
 	  -> struct().
@@ -254,6 +340,9 @@ year(RawPacket, PropList, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec month(raw_packet(), struct(), list())
 	   -> struct().
@@ -275,6 +364,9 @@ month(RawPacket, PropList, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 day(<<Day:8, " ", Rest/bitstring>>, PropList, Options) ->
     case bitstring_to_integer_check(<<Day>>, 1, 9) of
@@ -308,6 +400,9 @@ day(RawPacket, PropList, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 ttime(<<Hour:16/bitstring, ":",
 	Minute:16/bitstring, ":",
@@ -331,6 +426,9 @@ ttime(RawPacket, PropList, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 hour(RawPacket, PropList, {Hour, Minute, Second}, Options) 
   when is_bitstring(RawPacket) ->
@@ -345,6 +443,9 @@ hour(RawPacket, PropList, {Hour, Minute, Second}, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 minute(RawPacket, PropList, {Minute, Second}, Options) 
   when is_bitstring(RawPacket) ->
@@ -359,6 +460,9 @@ minute(RawPacket, PropList, {Minute, Second}, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 second(RawPacket, PropList, {Second}, Options) 
   when is_bitstring(RawPacket) ->
@@ -373,6 +477,9 @@ second(RawPacket, PropList, {Second}, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 timezone(<<"TZ", Rest/bitstring>>, PropList, Options) ->
     hostname(Rest, push({timezone, "TZ"}, PropList), Options);
@@ -382,6 +489,9 @@ timezone(RawPacket, PropList, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 hostname(RawPacket, PropList, Options) 
   when is_bitstring(RawPacket) ->
@@ -421,6 +531,9 @@ hostname(<<Char:8, Rest/bitstring>>, PropList,
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 tag(RawPacket, PropList, Options) 
   when is_bitstring(RawPacket) ->
@@ -445,6 +558,9 @@ tag(RawPacket, PropList, Tag, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 processid(<<"]", Rest/bitstring>>, PropList, Options) ->
     message(Rest, PropList, Options);
@@ -471,6 +587,9 @@ processid(RawPacket, PropList, ProcessID, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 message(RawPacket, PropList, Options) 
   when is_bitstring(RawPacket) ->
@@ -478,6 +597,9 @@ message(RawPacket, PropList, Options)
 
 %%--------------------------------------------------------------------
 %%
+%% @doc
+%%
+%% @end
 %%--------------------------------------------------------------------
 -spec bitstring_to_integer_check(bitstring(), integer(), integer()) 
 				-> {ok, integer()} |

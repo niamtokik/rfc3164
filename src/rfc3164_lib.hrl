@@ -16,6 +16,9 @@
 -type value() :: term().
 -type push() :: {key(), value()}.
 
+%%--------------------------------------------------------------------
+%%
+%%--------------------------------------------------------------------
 -record(rfc3164, { priority = undefined :: undefined | tuple(),
 		   facility = undefined :: atom() | integer(),
 		   severity = undefined ::  atom() | integer(),
@@ -32,22 +35,43 @@
 		 }
 ).
 
+
+%%--------------------------------------------------------------------
+%%
+%%--------------------------------------------------------------------
 -define( PUSH_RECORD(ATOM),
 	 push({ATOM, Value}, Prop, Options) 
 	    when is_record(Prop, rfc3164) ->
 	       Prop#rfc3164{ATOM = Value}
 ).
 
+%%--------------------------------------------------------------------
+%%
+%%--------------------------------------------------------------------
+-define(PULL_RECORD(ATOM),
+	pull(ATOM, Prop, Options) 
+	   when is_record(Prop, rfc3164)
+).
+
+%%--------------------------------------------------------------------
+%%
+%%--------------------------------------------------------------------
 -define( FACILITY(INTEGER, ATOM)
        , facility(INTEGER) -> ATOM; 
 	 facility(ATOM) -> INTEGER
 ).
 
+%%--------------------------------------------------------------------
+%%
+%%--------------------------------------------------------------------
 -define( SEVERITY(INTEGER, ATOM)
        , severity(INTEGER) -> ATOM; 
 	 severity(ATOM) -> INTEGER
 ).
 
+%%--------------------------------------------------------------------
+%%
+%%--------------------------------------------------------------------
 -define(MONTH(LITERAL, NUMBER),
 	month(<<LITERAL, " ", Rest/bitstring>>, PropList, Options) ->
 	       day(Rest, push({month, NUMBER}, PropList), Options)
